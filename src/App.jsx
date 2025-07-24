@@ -1,19 +1,24 @@
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, Link } from 'react-router-dom';
+import { supabase } from './lib/supabaseClient';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import AdminDashboard from './pages/AdminDashboard'; // Import AdminDashboard
 import { Switch } from "@/components/ui/switch";
+import { cn } from "./lib/utils";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
+
 
 function App() {
+  const [session, setSession] = useState(null);
   const [theme, setTheme] = useState(() => {
     const savedTheme = localStorage.getItem("theme");
     return savedTheme ? savedTheme : "light";
@@ -29,48 +34,65 @@ function App() {
     setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
   };
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
   return (
-    <div className="flex flex-column justify-center">
-      <h1 className="scroll-m-20 text-center text-4xl font-extrabold tracking-tight text-balance">
-        PawScan Admin Dashboard
-      </h1>
+    <div className="flex-1 flex-col">
       <div className="absolute top-4 right-4">
         <Switch checked={theme === "dark"} onCheckedChange={toggleTheme} />
       </div>
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Login to your account</CardTitle>
-          <CardDescription>
-            Enter your email below to login to your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                </div>
-                <Input id="password" type="password" required />
-              </div>
-            </div>
-          </form>
-        </CardContent>
-        <CardFooter className="flex-col gap-2">
-          <Button type="submit" className="w-full">
-            Login
-          </Button>
-        </CardFooter>
-      </Card>
+      <NavigationMenu className="ml-4 mb-2">
+        <NavigationMenuList>
+          <NavigationMenuItem>
+            <Link to="/">
+              <NavigationMenuLink className="font-semibold" >
+                Home
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <Link to="/veterinarian-verification">
+              <NavigationMenuLink className="font-semibold" >
+                Veterinarian Verification
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <Link to="/admin">
+              <NavigationMenuLink className="font-semibold" >
+                Admin Dashboard
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <NavigationMenuLink className="font-semibold" onClick={handleLogout}>
+              Logout
+            </NavigationMenuLink>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>
+      <Routes>
+        <Route path="/login" element={!session ? <Login /> : <Navigate to="/" />} />
+        <Route path="/" element={session ? <Home /> : <Navigate to="/login" />} />
+        <Route path="/veterinarian-verification" element={session ? <div>Veterinarian Verification Page</div> : <Navigate to="/login" />} />
+        <Route path="/admin" element={session ? <AdminDashboard /> : <Navigate to="/login" />} />
+      </Routes>
     </div>
   );
 }
