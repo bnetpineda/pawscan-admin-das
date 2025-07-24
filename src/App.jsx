@@ -30,9 +30,9 @@ function App() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    <div className="flex flex-column justify-center">
       <h1 className="scroll-m-20 text-center text-4xl font-extrabold tracking-tight text-balance">
-        Taxing Laughter: The Joke Tax Chronicles
+        PawScan Admin Dashboard
       </h1>
       <div className="absolute top-4 right-4">
         <Switch checked={theme === "dark"} onCheckedChange={toggleTheme} />
