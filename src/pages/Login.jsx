@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,17 +17,37 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && user.app_metadata.role === 'admin') {
+        navigate('/admin');
+      }
+    };
+
+    checkUser();
+  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (error) throw error;
+
+      if (data.user && data.user.app_metadata.role === 'admin') {
+        navigate('/admin');
+      } else {
+        // Handle non-admin user login if necessary
+        // For now, if not admin, they stay on the login page or redirect to a non-admin dashboard
+        navigate('/'); // Or navigate to a user dashboard if one exists
+      }
     } catch (error) {
       alert(error.error_description || error.message);
     } finally {

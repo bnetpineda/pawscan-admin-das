@@ -18,14 +18,17 @@ import {
   MenubarContent,
   MenubarItem,
 } from "../components/ui/menubar";
+import { useAdminAuth } from "../hooks/useAdminAuth";
 
 function AdminDashboard() {
+  useAdminAuth(); // Protect the dashboard
+
   const [posts, setPosts] = useState([]);
   const [comments, setComments] = useState([]);
   const [likes, setLikes] = useState([]);
   const [analysisHistory, setAnalysisHistory] = useState([]);
-  const [userDisplayNames, setUserDisplayNames] = useState({}); // New state for user display names
-  const [activeView, setActiveView] = useState("posts"); // New state for active view
+  const [userDisplayNames, setUserDisplayNames] = useState({});
+  const [activeView, setActiveView] = useState("posts");
 
   const [editingPostId, setEditingPostId] = useState(null);
   const [editingPostPetName, setEditingPostPetName] = useState("");
@@ -40,34 +43,9 @@ function AdminDashboard() {
     await fetchComments();
     await fetchLikes();
     await fetchAnalysisHistory();
-    await fetchAllUserDisplayNames();
   }
 
-  async function fetchAllUserDisplayNames() {
-    const userIds = new Set();
-    posts.forEach(post => userIds.add(post.user_id));
-    comments.forEach(comment => userIds.add(comment.user_id));
-    likes.forEach(like => userIds.add(like.user_id));
-    analysisHistory.forEach(analysis => userIds.add(analysis.user_id));
-
-    const names = {};
-    for (const userId of Array.from(userIds)) {
-      if (userId) {
-        const { data, error } = await supabase
-          .from("users")
-          .select("raw_user_meta_data")
-          .eq("id", userId)
-          .single();
-        if (error) {
-          console.error(`Error fetching display name for user ${userId}:`, error.message);
-          names[userId] = "N/A";
-        } else {
-          names[userId] = data?.raw_user_meta_data?.display_name || "N/A";
-        }
-      }
-    }
-    setUserDisplayNames(names);
-  }
+  
 
   async function fetchPosts() {
     const { data, error } = await supabase.from("newsfeed_posts").select("*");
