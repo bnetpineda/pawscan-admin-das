@@ -21,9 +21,11 @@ function Login() {
 
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user && user.app_metadata.role === 'admin') {
-        navigate('/admin');
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user && user.app_metadata.role === "admin") {
+        navigate("/admin");
       }
     };
 
@@ -41,12 +43,12 @@ function Login() {
       });
       if (error) throw error;
 
-      if (data.user && data.user.app_metadata.role === 'admin') {
-        navigate('/admin');
+      if (data.user && data.user.app_metadata.role === "admin") {
+        navigate("/admin");
       } else {
         // Handle non-admin user login if necessary
         // For now, if not admin, they stay on the login page or redirect to a non-admin dashboard
-        navigate('/'); // Or navigate to a user dashboard if one exists
+        navigate("/"); // Or navigate to a user dashboard if one exists
       }
     } catch (error) {
       alert(error.error_description || error.message);
